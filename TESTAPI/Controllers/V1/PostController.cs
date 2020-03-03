@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TESTAPI.Contract.V1;
-using TESTAPI.Controllers.V1.Requests;
-using TESTAPI.Controllers.V1.Responses;
+using TESTAPI.Contract.V1.Requests;
+using TESTAPI.Contract.V1.Responses;
 using TESTAPI.Domain;
 
 namespace TESTAPI.Controllers.V1
