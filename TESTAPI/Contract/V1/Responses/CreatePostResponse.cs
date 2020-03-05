@@ -7,6 +7,6 @@ namespace TESTAPI.Contract.V1.Responses
 {
     public class CreatePostResponse
     {
-        public string Id { get; set; }
+        public Guid Id { get; set; }
     }
 }

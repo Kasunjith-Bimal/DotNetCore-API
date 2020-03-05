@@ -7,28 +7,55 @@ using TESTAPI.Contract.V1;
 using TESTAPI.Contract.V1.Requests;
 using TESTAPI.Contract.V1.Responses;
 using TESTAPI.Domain;
+using TESTAPI.Services;
 
 namespace TESTAPI.Controllers.V1
 {
     public class PostController:Controller
     {
-        private List<Post> _PostList;
+        private readonly IPostService _postService;
 
-        public PostController()
+        public PostController(IPostService postService)
         {
-            _PostList = new List<Post>();
-            for (int i = 0; i < 10; i++)
-            {
-                _PostList.Add(new Post() { Id = Guid.NewGuid().ToString() });
-            }
-
+            _postService = postService;
         }
         [HttpGet(ApiRoutes.Posts.GetAll)]
-        public IActionResult Get()
+        public IActionResult GetAll()
         {
-            return Ok(_PostList);
+            return Ok(_postService.GetPosts());
 
         }
+
+        [HttpGet(ApiRoutes.Posts.Get)]
+        public IActionResult Get([FromBody] Guid postId)
+        {
+            Post post = _postService.GetPostById(postId);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(post);
+
+        }
+
+        [HttpPut(ApiRoutes.Posts.Update)]
+        public IActionResult Update([FromRoute] Guid postId,[FromBody] UpdatePostReqest updatePostReqest)
+        {
+            var post = new Post { Id = postId,Name = updatePostReqest.Name };
+
+            if (_postService.UpdatePost(post))
+            {
+                return Ok(post);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+       
 
         [HttpPost(ApiRoutes.Posts.Create)]
         public IActionResult Post([FromBody] CreatePostReqest postReqest)
@@ -36,16 +63,16 @@ namespace TESTAPI.Controllers.V1
 
             var post = new Post() { Id = postReqest.Id };
 
-            if (string.IsNullOrEmpty(post.Id))
+            if (post.Id != Guid.Empty)
             {
-                post.Id = Guid.NewGuid().ToString();
+                post.Id = Guid.NewGuid();
             }
 
-            _PostList.Add(post);
+            _postService.GetPosts().Add(post);
 
             var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
 
-            var location = baseUrl + "/" + ApiRoutes.Posts.Get.Replace("{postId}", post.Id);
+            var location = baseUrl + "/" + ApiRoutes.Posts.Get.Replace("{postId}", post.Id.ToString());
 
             var response = new CreatePostResponse() { Id = post.Id };
 
