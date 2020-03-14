@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TESTAPI.Data;
+using TESTAPI.Services;
 
 namespace TESTAPI.Instrallers
 {
@@ -21,6 +22,8 @@ namespace TESTAPI.Instrallers
             services.AddDefaultIdentity<IdentityUser>()
                 .AddDefaultUI(UIFramework.Bootstrap4)
                 .AddEntityFrameworkStores<DataContext>();
+
+            services.AddScoped<IPostService, PostService>();
         }
     }
 }

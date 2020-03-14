@@ -24,6 +24,8 @@ namespace TESTAPI.Contract.V1
 
             public const string Update = Base + "/posts/{postId}";
 
+            public const string Delete = Base + "/posts/{postId}";
+
         }
 
     }

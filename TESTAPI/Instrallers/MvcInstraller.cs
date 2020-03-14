@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TESTAPI.Services;
 
 namespace TESTAPI.Instrallers
 {
@@ -17,6 +18,8 @@ namespace TESTAPI.Instrallers
             services.AddSwaggerGen(x => {
                 x.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "API", Version = "V1" });
             });
+
+       
         }
     }
 }

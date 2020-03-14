@@ -1,48 +1,62 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TESTAPI.Data;
 using TESTAPI.Domain;
 
 namespace TESTAPI.Services
 {
     public class PostService :IPostService
     {
-        private readonly List<Post> _PostList;
+        private readonly DataContext _dataContext;
 
-        public PostService()
+
+        public PostService(DataContext dataContext)
         {
-            _PostList = new List<Post>();
-            for (int i = 0; i < 10; i++)
+            _dataContext = dataContext;
+        }
+        public async Task<bool> CreatePostAsync(Post postToCreate)
+        {
+            await _dataContext.AddAsync(postToCreate);
+            var created =  await _dataContext.SaveChangesAsync();
+            return created > 0;
+        }
+
+        public async  Task<bool> DeletePostAsync(Guid postToDelete)
+        {
+            Post postDeleteObj = await GetPostByIdAsync(postToDelete);
+
+            if (postDeleteObj != null)
             {
-                _PostList.Add(new Post() { Id = Guid.NewGuid(), Name = $"Post Name {i}" });
-            }
-        }
-
-        public Post GetPostById(Guid postId)
-        {
-            return _PostList.Where(x => x.Id == postId).FirstOrDefault();
-        }
-
-        public List<Post> GetPosts()
-        {
-            return _PostList;
-        }
-
-        public bool UpdatePost(Post postToUpdate)
-        {
-            var exists = GetPostById(postToUpdate.Id);
-            if (exists != null)
-            {
-                var index = _PostList.FindIndex(x => x.Id == postToUpdate.Id);
-                _PostList[index] = postToUpdate;
-                return true;
+                _dataContext.Posts.Remove(postDeleteObj);
+                var deleted = await _dataContext.SaveChangesAsync();
+                return deleted > 0;
             }
             else
             {
                 return false;
             }
-          
+        }
+
+        public async Task<Post> GetPostByIdAsync(Guid postId)
+        {
+            return await _dataContext.Posts.Where(x => x.Id == postId).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Post>> GetPostsAsync()
+        {
+            return await _dataContext.Posts.ToListAsync();
+        }
+
+        public async Task<bool> UpdatePostAsync(Post postToUpdate)
+        {
+             _dataContext.Posts.Update(postToUpdate);
+              var updated = await _dataContext.SaveChangesAsync();
+               return updated > 0;
+
+
         }
     }
 }
