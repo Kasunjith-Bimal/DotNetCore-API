@@ -54,7 +54,7 @@ namespace TESTAPI.Services
         {
              _dataContext.Posts.Update(postToUpdate);
               var updated = await _dataContext.SaveChangesAsync();
-               return updated > 0;
+              return updated > 0;
 
 
         }
