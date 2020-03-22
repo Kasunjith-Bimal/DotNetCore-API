@@ -23,7 +23,8 @@ namespace TESTAPI.Instrallers
                 .AddDefaultUI(UIFramework.Bootstrap4)
                 .AddEntityFrameworkStores<DataContext>();
 
-            services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IIdentityService, IdentityService>();
+         
         }
     }
 }

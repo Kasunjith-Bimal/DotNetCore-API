@@ -11,6 +11,13 @@ namespace TESTAPI.Instrallers
     {
         public static void InstrallServiceAssembly(this IServiceCollection services, IConfiguration Configuration)
         {
+            services.AddCors(options => options.AddPolicy("Cors", builder =>
+            {
+                builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            }));
 
             var instrallers = typeof(Startup).Assembly.ExportedTypes.Where(x => typeof(IInstraller).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract).Select(Activator.CreateInstance).Cast<IInstraller>().ToList();
 

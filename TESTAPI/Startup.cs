@@ -48,7 +48,12 @@ namespace TESTAPI
                 app.UseHsts();
             }
 
+            app.UseCors("Cors");
+            //app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
             app.UseAuthentication();
+
             var swaggerOptions = new SwaggerOptions();
             Configuration.GetSection(nameof(SwaggerOptions)).Bind(swaggerOptions);
 
@@ -62,16 +67,8 @@ namespace TESTAPI
                 option.SwaggerEndpoint(swaggerOptions.UIEndPoint, swaggerOptions.Description);
 
             });
-            //app.UseHttpsRedirection();
-            app.UseStaticFiles();
-          
 
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
+            app.UseMvc();
         }
     }
 }
