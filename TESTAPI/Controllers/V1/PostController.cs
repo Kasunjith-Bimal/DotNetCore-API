@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +13,7 @@ using TESTAPI.Services;
 
 namespace TESTAPI.Controllers.V1
 {
+    [Authorize]
     public class PostController:Controller
     {
         private readonly IPostService _postService;
@@ -20,6 +23,7 @@ namespace TESTAPI.Controllers.V1
             _postService = postService;
         }
         [HttpGet(ApiRoutes.Posts.GetAll)]
+       
         public async Task<IActionResult> GetAll()
         {
             return Ok(await _postService.GetPostsAsync());

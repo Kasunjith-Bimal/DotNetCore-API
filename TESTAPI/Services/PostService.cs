@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +12,11 @@ namespace TESTAPI.Services
     public class PostService :IPostService
     {
         private readonly DataContext _dataContext;
-
-
+      
         public PostService(DataContext dataContext)
         {
             _dataContext = dataContext;
+           
         }
         public async Task<bool> CreatePostAsync(Post postToCreate)
         {
