@@ -37,5 +37,26 @@ namespace TESTAPI.Controllers.V1
 
             });
         }
+
+
+        [HttpPost(ApiRoutes.Identity.Login)]
+        public async Task<IActionResult> Login([FromBody] UserLoginReqest reqest)
+        {
+            var authResponse = await _identityService.LoginAsync(reqest.Email, reqest.Password);
+
+            if (!authResponse.Sucess)
+            {
+                return BadRequest(new AuthFaillResponse
+                {
+                    Error = authResponse.ErrorMessage
+                });
+            }
+
+            return Ok(new AuthSucessResponse
+            {
+                Token = authResponse.Token
+
+            });
+        }
     }
 } 

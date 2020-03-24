@@ -9,5 +9,7 @@ namespace TESTAPI.Services
     public interface IIdentityService
     {
         Task<AuthenticationResult> RegistrationAsync(string email, string password);
+
+        Task<AuthenticationResult> LoginAsync(string email, string password);
     }
 }

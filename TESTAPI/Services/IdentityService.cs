@@ -24,6 +24,34 @@ namespace TESTAPI.Services
            
         }
 
+        public async Task<AuthenticationResult> LoginAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return new AuthenticationResult
+                {
+
+                    ErrorMessage = new[] { "User does not exits" }
+                };
+            }
+
+            var userHasValidPassword = await _userManager.CheckPasswordAsync(user, password);
+
+
+            if (!userHasValidPassword)
+            {
+                return new AuthenticationResult
+                {
+
+                    ErrorMessage = new[] { "User Password conbination is Wrong" }
+                };
+            }
+
+            return GenerateAuthenticationResultForUser(user);
+        }
+
         public async Task<AuthenticationResult> RegistrationAsync(string email, string password)
         {
             var existingUser = await _userManager.FindByEmailAsync(email);
@@ -32,7 +60,7 @@ namespace TESTAPI.Services
             {
                 return new AuthenticationResult
                 {
-                    ErrorMessage = new[] {"üser With the email address already exists"}
+                    ErrorMessage = new[] { "üser With the email address already exists" }
 
                 };
             }
@@ -54,7 +82,13 @@ namespace TESTAPI.Services
                 };
             }
 
-           // var tokenHandler = new JwtSecurityTokenHandler();
+            // var tokenHandler = new JwtSecurityTokenHandler();
+            return GenerateAuthenticationResultForUser(newUsser);
+
+        }
+
+        private AuthenticationResult GenerateAuthenticationResultForUser(IdentityUser newUsser)
+        {
             var key = Encoding.ASCII.GetBytes(_JwtSttings.Secret);
             var tokenDescription = new SecurityTokenDescriptor
             {
@@ -66,18 +100,17 @@ namespace TESTAPI.Services
 
                 }),
                 Expires = DateTime.UtcNow.AddHours(2),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),SecurityAlgorithms.HmacSha256)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
             };
 
 
-            var token = new JwtSecurityToken(_JwtSttings.Issuer,_JwtSttings.Issuer,expires: DateTime.Now.AddHours(2), signingCredentials: tokenDescription.SigningCredentials);
+            var token = new JwtSecurityToken(_JwtSttings.Issuer, _JwtSttings.Issuer, expires: DateTime.Now.AddHours(2), signingCredentials: tokenDescription.SigningCredentials);
 
             return new AuthenticationResult
             {
                 Sucess = true,
                 Token = new JwtSecurityTokenHandler().WriteToken(token)
             };
-
         }
     }
 }
