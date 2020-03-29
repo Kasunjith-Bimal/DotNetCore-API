@@ -80,23 +80,22 @@ namespace TESTAPI.Services
 
                     ErrorMessage = createUser.Errors.Select(x => x.Description)
                 };
-            }
-
+            }   
             // var tokenHandler = new JwtSecurityTokenHandler();
             return GenerateAuthenticationResultForUser(newUsser);
 
         }
 
-        private AuthenticationResult GenerateAuthenticationResultForUser(IdentityUser newUsser)
+        private AuthenticationResult GenerateAuthenticationResultForUser(IdentityUser user)
         {
             var key = Encoding.ASCII.GetBytes(_JwtSttings.Secret);
             var tokenDescription = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] {
-                    new Claim(JwtRegisteredClaimNames.Sub, newUsser.Email),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Email, newUsser.Email),
-                    new Claim("Id", newUsser.Id),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim("id", user.Id),
 
                 }),
                 Expires = DateTime.UtcNow.AddHours(2),
@@ -104,7 +103,12 @@ namespace TESTAPI.Services
             };
 
 
-            var token = new JwtSecurityToken(_JwtSttings.Issuer, _JwtSttings.Issuer, expires: DateTime.Now.AddHours(2), signingCredentials: tokenDescription.SigningCredentials);
+            // var jsonuser = new { id = user.Id };
+
+
+            var token = new JwtSecurityToken(_JwtSttings.Issuer, _JwtSttings.Issuer, claims: tokenDescription.Subject.Claims, null, expires: DateTime.Now.AddHours(2), signingCredentials: tokenDescription.SigningCredentials);
+
+           // token.Payload["User"] = jsonuser;
 
             return new AuthenticationResult
             {
