@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
+using TESTAPI.Extention;
 using TESTAPI.Options;
 using TESTAPI.Services;
 
@@ -22,7 +23,7 @@ namespace TESTAPI.Instrallers
             Configuration.Bind(nameof(JwtSettings), JwtSettings);
 
             services.AddSingleton(JwtSettings);
-
+           
             services.AddScoped<IPostService, PostService>();
 
 

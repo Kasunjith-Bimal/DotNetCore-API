@@ -9,6 +9,7 @@ using TESTAPI.Contract.V1;
 using TESTAPI.Contract.V1.Requests;
 using TESTAPI.Contract.V1.Responses;
 using TESTAPI.Domain;
+using TESTAPI.Extention;
 using TESTAPI.Services;
 
 namespace TESTAPI.Controllers.V1
@@ -47,7 +48,17 @@ namespace TESTAPI.Controllers.V1
         [HttpPut(ApiRoutes.Posts.Update)]
         public async Task<IActionResult> Update([FromRoute] Guid postId,[FromBody] UpdatePostReqest updatePostReqest)
         {
-            var post = new Post { Id = postId,Name = updatePostReqest.Name };
+
+            var userOwnsPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
+
+            if (!userOwnsPost)
+            {
+                return BadRequest(new { error = "You do not on this post" });
+            }
+
+            var post = await _postService.GetPostByIdAsync(postId);
+
+            post.Name = updatePostReqest.Name;
 
             bool isUpdated = await _postService.UpdatePostAsync(post);
 
@@ -64,6 +75,14 @@ namespace TESTAPI.Controllers.V1
         [HttpDelete(ApiRoutes.Posts.Delete)]
         public async Task<IActionResult> Delete([FromRoute] Guid postId)
         {
+
+            var userOwnsPost = await _postService.UserOwnsPostAsync(postId, HttpContext.GetUserId());
+
+            if (!userOwnsPost)
+            {
+                return BadRequest(new { error = "You do not on this post" });
+            }
+
             bool isDeleted =  await _postService.DeletePostAsync(postId);
 
             if (isDeleted)
@@ -84,7 +103,10 @@ namespace TESTAPI.Controllers.V1
         public async Task<IActionResult> Post([FromBody] CreatePostReqest postReqest)
         {
 
-            var post = new Post() { Name = postReqest.Name };
+            var post = new Post() {
+                Name = postReqest.Name,
+                UserId = HttpContext.GetUserId() 
+            };
 
             bool created =  await _postService.CreatePostAsync(post);
 
