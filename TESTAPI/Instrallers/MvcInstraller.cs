@@ -51,30 +51,22 @@ namespace TESTAPI.Instrallers
                     { "Bearer", new string[] { } }
                 });
 
-                ////x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                ////{
-                ////    Description = "JWT Authentication header using bearer scheme",
-                ////    Name = "Authorization",
-                ////    In = ParameterLocation.Header,
-                ////    Type = SecuritySchemeType.ApiKey
-
-                ////});
-
-
-                ////x.AddSecurityRequirement(new OpenApiSecurityRequirement()
-                ////{
-                ////    {
-                ////        new OpenApiSecurityScheme
-                ////        {                   
-                ////            Name = "Bearer",
-                ////            In = ParameterLocation.Header,
-                ////        },
-                ////        new List<string>()
-                ////    }
-                ////});
-
             });
 
+            var TokenValidationParametes = new TokenValidationParameters
+            {
+
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = JwtSettings.Issuer,
+                ValidAudience = JwtSettings.Issuer,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(JwtSettings.Secret)),
+
+            };
+
+            services.AddSingleton(TokenValidationParametes);
 
             services.AddAuthentication(x =>
             {
@@ -85,19 +77,9 @@ namespace TESTAPI.Instrallers
 
             }).AddJwtBearer(x => {
                 x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
+                x.TokenValidationParameters = TokenValidationParametes;
 
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = JwtSettings.Issuer,
-                    ValidAudience = JwtSettings.Issuer,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(JwtSettings.Secret)),
 
-                };
-             
             });
 
 

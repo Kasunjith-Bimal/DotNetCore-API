@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TESTAPI.Contract.V1.Responses
+namespace TESTAPI.Contract.V1.Requests
 {
-    public class AuthSucessResponse
+    public class RefreshTokenReqest
     {
         public string Token { get; set; }
 
-        public string RefreshToken { get; set; }
-
-
+        public string RefreshToken { get; set; } 
     }
 }

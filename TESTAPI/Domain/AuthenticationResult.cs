@@ -9,6 +9,8 @@ namespace TESTAPI.Domain
     {
         public string Token { get; set; }
 
+        public string RefreshToken { get; set; }
+
         public bool Sucess { get; set; }
 
         public IEnumerable<string> ErrorMessage { get; set; }
