@@ -33,7 +33,8 @@ namespace TESTAPI.Controllers.V1
 
             return Ok(new AuthSucessResponse
             {
-                Token = authResponse.Token
+                Token = authResponse.Token,
+                RefreshToken = authResponse.RefreshToken
 
             });
         }
@@ -54,7 +55,30 @@ namespace TESTAPI.Controllers.V1
 
             return Ok(new AuthSucessResponse
             {
-                Token = authResponse.Token
+                Token = authResponse.Token,
+                RefreshToken = authResponse.RefreshToken
+
+            });
+        }
+
+        [HttpPost(ApiRoutes.Identity.Refresh)]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenReqest reqest)
+
+        {
+            var authResponse = await _identityService.RefreshTokenAsync(reqest.Token, reqest.RefreshToken);
+
+            if (!authResponse.Sucess)
+            {
+                return BadRequest(new AuthFaillResponse
+                {
+                    Error = authResponse.ErrorMessage
+                });
+            }
+
+            return Ok(new AuthSucessResponse
+            {
+                Token = authResponse.Token,
+                RefreshToken = authResponse.RefreshToken
 
             });
         }

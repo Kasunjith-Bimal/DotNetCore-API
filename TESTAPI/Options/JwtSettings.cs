@@ -9,6 +9,7 @@ namespace TESTAPI.Options
     {
         public string Secret { get; set; }
         public string Issuer { get; set; }
-      
+        public TimeSpan TokenLifeTime { get; set; }
+
     }
 }

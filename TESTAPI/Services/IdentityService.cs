@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using TESTAPI.Data;
 using TESTAPI.Domain;
 using TESTAPI.Options;
 
@@ -16,12 +18,16 @@ namespace TESTAPI.Services
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly JwtSettings _JwtSttings;
+        private readonly TokenValidationParameters _tokenValidationParameters;
+        private readonly DataContext _context;
 
-        public IdentityService(UserManager<IdentityUser> userManager, JwtSettings JwtSttings)
+
+        public IdentityService(UserManager<IdentityUser> userManager, JwtSettings JwtSttings, TokenValidationParameters tokenValidationParameters, DataContext context)
         {
             _userManager = userManager;
             _JwtSttings = JwtSttings;
-           
+            _tokenValidationParameters = tokenValidationParameters;
+            _context = context;
         }
 
         public async Task<AuthenticationResult> LoginAsync(string email, string password)
@@ -49,7 +55,100 @@ namespace TESTAPI.Services
                 };
             }
 
-            return GenerateAuthenticationResultForUser(user);
+            return await GenerateAuthenticationResultForUserAsync(user);
+        }
+
+        public async Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken)
+        {
+            var validatedToken = GetPrinciplFromToken(token);
+
+            if (validatedToken == null)
+            {
+                return new AuthenticationResult { ErrorMessage = new[] { "Invalid Token" }};
+            }
+
+            var expiryDateUnix = long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+
+            var expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(expiryDateUnix);
+
+
+            if (expiryDateTimeUtc > DateTime.Now)
+            {
+                return new AuthenticationResult { ErrorMessage = new[] { "This Token hasn't expired yet" } };
+            }
+
+            var jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+            var storedRefreshToken = await _context.RefreshTokens.SingleOrDefaultAsync(x => x.Token == refreshToken);
+
+            if (storedRefreshToken == null)
+            {
+                return new AuthenticationResult { ErrorMessage = new[] { "This refresh token does not exist" } };
+
+            }
+
+            if (DateTime.UtcNow > storedRefreshToken.ExpiryDate)
+            {
+                return new AuthenticationResult { ErrorMessage = new[] { "This refresh token has expired" } };
+
+            }
+
+            if (storedRefreshToken.Invalidated)
+            {
+                return new AuthenticationResult { ErrorMessage = new[] { "This refresh token has been invalidated" } };
+
+            }
+
+            if (storedRefreshToken.Used)
+            {
+                return new AuthenticationResult { ErrorMessage = new[] { "This refresh token has been used" } };
+
+            }
+
+            if (storedRefreshToken.JwtId != jti)
+            {
+                return new AuthenticationResult { ErrorMessage = new[] { "This refresh token does not match this JWT" } };
+
+            }
+
+            storedRefreshToken.Used = true;
+            _context.RefreshTokens.Update(storedRefreshToken);
+            await _context.SaveChangesAsync();
+
+
+            var user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == "id").Value);
+
+            return await GenerateAuthenticationResultForUserAsync(user);
+
+        }
+
+        private ClaimsPrincipal GetPrinciplFromToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            try
+            {
+                var principle = tokenHandler.ValidateToken(token, _tokenValidationParameters, out var validatedToken);
+
+                if (!IsJwtWithValidSecurityAlgorithm(validatedToken))
+                {
+                    return null;
+                }
+
+                return principle;
+
+            }
+            catch (Exception ex)
+            {
+
+                return null;
+            }  
+        }
+
+        private bool IsJwtWithValidSecurityAlgorithm(SecurityToken validatedToken)
+        {
+
+            return (validatedToken is JwtSecurityToken jwtSecurityToken) && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
         }
 
         public async Task<AuthenticationResult> RegistrationAsync(string email, string password)
@@ -82,11 +181,11 @@ namespace TESTAPI.Services
                 };
             }   
             // var tokenHandler = new JwtSecurityTokenHandler();
-            return GenerateAuthenticationResultForUser(newUsser);
+            return await GenerateAuthenticationResultForUserAsync(newUsser);
 
         }
 
-        private AuthenticationResult GenerateAuthenticationResultForUser(IdentityUser user)
+        private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(IdentityUser user)
         {
             var key = Encoding.ASCII.GetBytes(_JwtSttings.Secret);
             var tokenDescription = new SecurityTokenDescriptor
@@ -98,22 +197,28 @@ namespace TESTAPI.Services
                     new Claim("id", user.Id),
 
                 }),
-                Expires = DateTime.UtcNow.AddHours(2),
+                Expires = DateTime.UtcNow.Add(_JwtSttings.TokenLifeTime),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
             };
 
-
-            // var jsonuser = new { id = user.Id };
-
-
             var token = new JwtSecurityToken(_JwtSttings.Issuer, _JwtSttings.Issuer, claims: tokenDescription.Subject.Claims, null, expires: DateTime.Now.AddHours(2), signingCredentials: tokenDescription.SigningCredentials);
 
-           // token.Payload["User"] = jsonuser;
+            var refreshToken = new RefreshToken
+            {
+                JwtId = token.Id,
+                UserId = user.Id,
+                CreationDate = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.AddMonths(6)
+            };
+
+            await _context.RefreshTokens.AddAsync(refreshToken);
+            await _context.SaveChangesAsync();
 
             return new AuthenticationResult
             {
                 Sucess = true,
-                Token = new JwtSecurityTokenHandler().WriteToken(token)
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                RefreshToken = refreshToken.Token
             };
         }
     }
