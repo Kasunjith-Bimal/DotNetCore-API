@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -179,7 +180,9 @@ namespace TESTAPI.Services
 
                     ErrorMessage = createUser.Errors.Select(x => x.Description)
                 };
-            }   
+            }
+
+            await _userManager.AddClaimAsync(newUsser, new Claim("tag.view", "true"));   
             // var tokenHandler = new JwtSecurityTokenHandler();
             return await GenerateAuthenticationResultForUserAsync(newUsser);
 
@@ -188,15 +191,23 @@ namespace TESTAPI.Services
         private async Task<AuthenticationResult> GenerateAuthenticationResultForUserAsync(IdentityUser user)
         {
             var key = Encoding.ASCII.GetBytes(_JwtSttings.Secret);
-            var tokenDescription = new SecurityTokenDescriptor
+            var claims = new List<Claim>
             {
-                Subject = new ClaimsIdentity(new[] {
                     new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
                     new Claim("id", user.Id),
 
-                }),
+
+            };
+
+            var userClims = await _userManager.GetClaimsAsync(user);
+
+            claims.AddRange(userClims);
+
+            var tokenDescription = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.Add(_JwtSttings.TokenLifeTime),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
             };

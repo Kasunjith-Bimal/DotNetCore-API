@@ -37,5 +37,11 @@ namespace TESTAPI.Contract.V1
             public const string Refresh = Base + "identity/Refresh";
         }
 
+        public static class Tags
+        {
+
+            public const string GetAll = Base + "/tags";
+        }
+
     }
 }
