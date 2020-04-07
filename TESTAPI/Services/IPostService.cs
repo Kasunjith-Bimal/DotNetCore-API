@@ -18,5 +18,6 @@ namespace TESTAPI.Services
 
         Task<bool> DeletePostAsync(Guid postToDelete);
         Task<bool> UserOwnsPostAsync(Guid postId, string getUserId);
+        Task<List<string>> GetAllTagsAsync();
     }
 }

@@ -41,6 +41,13 @@ namespace TESTAPI.Services
             }
         }
 
+        public async Task<List<string>> GetAllTagsAsync()
+        {
+            List<string> StringList = new List<string>() { "AA", "BB", "CC" };
+
+            return await Task.Run(() => StringList.ToList());
+        }
+
         public async Task<Post> GetPostByIdAsync(Guid postId)
         {
             return await _dataContext.Posts.Where(x => x.Id == postId).FirstOrDefaultAsync();
