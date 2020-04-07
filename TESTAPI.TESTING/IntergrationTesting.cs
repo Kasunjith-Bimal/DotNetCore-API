@@ -15,10 +15,10 @@ using TESTAPI.Data;
 
 namespace TESTAPI.TESTING
 {
-    public class IntergrationTesting
+    public class IntergrationTesting: IDisposable
     {
         protected readonly HttpClient TestClient;
-
+        private readonly IServiceProvider _serviceProvider;
 
         protected IntergrationTesting()
         {
@@ -31,7 +31,16 @@ namespace TESTAPI.TESTING
                     });
 
                  });
+            _serviceProvider = appFactory.Services;
             TestClient = appFactory.CreateClient();
+        }
+
+        public void Dispose()
+        {
+            using var serviceScope = _serviceProvider.CreateScope();
+            var context = serviceScope.ServiceProvider.GetService<DataContext>();
+            context.Database.EnsureDeleted();
+
         }
 
         protected async Task AuthenticationAsync()
