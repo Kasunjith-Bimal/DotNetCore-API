@@ -13,7 +13,7 @@ using TESTAPI.Services;
 
 namespace TESTAPI.Controllers.V1
 {
-    [Authorize]
+    [Authorize (Roles ="Poster,Admin")]
     public class PostController:Controller
     {
         private readonly IPostService _postService;
@@ -99,6 +99,7 @@ namespace TESTAPI.Controllers.V1
 
 
         [HttpPost(ApiRoutes.Posts.Create)]
+        [Authorize(Roles = "Poster")]
         public async Task<IActionResult> Post([FromBody] CreatePostReqest postReqest)
         {
 
