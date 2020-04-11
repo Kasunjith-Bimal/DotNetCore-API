@@ -18,17 +18,20 @@ namespace TESTAPI.Services
     public class IdentityService : IIdentityService
     {
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly JwtSettings _JwtSttings;
         private readonly TokenValidationParameters _tokenValidationParameters;
         private readonly DataContext _context;
 
 
-        public IdentityService(UserManager<IdentityUser> userManager, JwtSettings JwtSttings, TokenValidationParameters tokenValidationParameters, DataContext context)
+        public IdentityService(UserManager<IdentityUser> userManager, JwtSettings JwtSttings, TokenValidationParameters tokenValidationParameters, DataContext context, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _JwtSttings = JwtSttings;
             _tokenValidationParameters = tokenValidationParameters;
             _context = context;
+            _roleManager = roleManager;
+
         }
 
         public async Task<AuthenticationResult> LoginAsync(string email, string password)
@@ -182,7 +185,12 @@ namespace TESTAPI.Services
                 };
             }
 
-            await _userManager.AddClaimAsync(newUsser, new Claim("tag.view", "true"));   
+            await _userManager.AddClaimAsync(newUsser, new Claim("tag.view", "true"));
+
+            //await _userManager.AddToRoleAsync(newUsser, "Admin");
+
+            await _userManager.AddToRoleAsync(newUsser, "Poster");
+
             // var tokenHandler = new JwtSecurityTokenHandler();
             return await GenerateAuthenticationResultForUserAsync(newUsser);
 
@@ -204,6 +212,24 @@ namespace TESTAPI.Services
             var userClims = await _userManager.GetClaimsAsync(user);
 
             claims.AddRange(userClims);
+
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            foreach (var userRole in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, userRole));
+                var role = await _roleManager.FindByNameAsync(userRole);
+                if (role == null) continue;
+                var roleClaims = await _roleManager.GetClaimsAsync(role);
+
+                foreach (var roleClaim in roleClaims)
+                {
+                    if (claims.Contains(roleClaim))
+                        continue;
+
+                    claims.Add(roleClaim);
+                }
+            }
 
             var tokenDescription = new SecurityTokenDescriptor
             {

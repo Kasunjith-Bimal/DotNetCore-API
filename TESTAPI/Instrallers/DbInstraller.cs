@@ -20,6 +20,7 @@ namespace TESTAPI.Instrallers
               options.UseSqlServer(
                   Configuration.GetConnectionString("DefaultConnection")));
             services.AddDefaultIdentity<IdentityUser>()
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<DataContext>();
 
             services.AddScoped<IIdentityService, IdentityService>();
