@@ -12,8 +12,8 @@ namespace TESTAPI.Contract.V1
         public const string Version = "v1";
 
         public const string Base = Root + "/" + Version;
+       
 
-        
         public static class Posts
         {
             public const string GetAll = Base + "/posts";
@@ -41,6 +41,12 @@ namespace TESTAPI.Contract.V1
         {
 
             public const string GetAll = Base + "/tags";
+        }
+
+        public static class Comment
+        {
+
+            public const string GetAll = Base + "/comment";
         }
 
     }
