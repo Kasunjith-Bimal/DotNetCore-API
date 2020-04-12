@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Swagger;
+using TESTAPI.Authorization;
 using TESTAPI.Extention;
 using TESTAPI.Options;
 using TESTAPI.Services;
@@ -65,7 +68,14 @@ namespace TESTAPI.Instrallers
             services.AddAuthorization(Options => {
 
                 Options.AddPolicy("tagViewer", builder => builder.RequireClaim("tag.view", "true"));
+                Options.AddPolicy("WorkMyComapny", policy =>
+                {
+                    policy.AddRequirements(new Requirement("kasunysoft.com"));
+
+                });
             });
+
+            services.AddSingleton<IAuthorizationHandler, Handler>();
 
             services.AddSwaggerGen(x =>
             {
