@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TESTAPI.Options;
 using TESTAPI.Instrallers;
 using Microsoft.Extensions.Hosting;
+using AutoMapper;
 
 namespace TESTAPI
 {
@@ -21,6 +22,7 @@ namespace TESTAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.InstrallServiceAssembly(Configuration);
+            services.AddAutoMapper(typeof(Startup));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
