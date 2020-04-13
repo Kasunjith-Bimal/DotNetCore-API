@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -17,30 +18,34 @@ namespace TESTAPI.Controllers.V1
     public class PostController:Controller
     {
         private readonly IPostService _postService;
+        private readonly IMapper _mapper;
 
-        public PostController(IPostService postService)
+        public PostController(IPostService postService, IMapper mapper)
         {
             _postService = postService;
+            _mapper = mapper;
         }
         [HttpGet(ApiRoutes.Posts.GetAll)]
        
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _postService.GetPostsAsync());
+            var posts = await _postService.GetPostsAsync();
+            var postResponses = _mapper.Map<List<PostResponse>>(posts);
+            return Ok(postResponses);
 
         }
 
         [HttpGet(ApiRoutes.Posts.Get)]
         public async Task<IActionResult> Get([FromRoute] Guid postId)
         {
-            Post post = await _postService.GetPostByIdAsync(postId);
+            var post = await _postService.GetPostByIdAsync(postId);
 
             if (post == null)
             {
                 return NotFound();
             }
 
-            return Ok(post);
+            return Ok(_mapper.Map<PostResponse>(post));
 
         }
 
@@ -63,7 +68,7 @@ namespace TESTAPI.Controllers.V1
 
             if (isUpdated)
             {
-                return Ok(post);
+                return Ok(_mapper.Map<PostResponse>(post));
             }
             else
             {
@@ -114,9 +119,7 @@ namespace TESTAPI.Controllers.V1
 
             var location = baseUrl + "/" + ApiRoutes.Posts.Get.Replace("{postId}", post.Id.ToString());
 
-            var response = new CreatePostResponse() { Id = post.Id };
-
-            return Created(location, response);
+            return Created(location, _mapper.Map<PostResponse>(post));
           
           
          

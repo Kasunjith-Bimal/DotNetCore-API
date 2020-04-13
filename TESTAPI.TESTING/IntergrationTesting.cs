@@ -49,11 +49,11 @@ namespace TESTAPI.TESTING
         }
 
 
-        protected async Task<CreatePostResponse> CreatePostAsync(CreatePostReqest reqest)
+        protected async Task<PostResponse> CreatePostAsync(CreatePostReqest reqest)
         {
            var response =  await TestClient.PostAsJsonAsync(ApiRoutes.Posts.Create, reqest);
 
-           return await response.Content.ReadAsAsync<CreatePostResponse>();
+           return await response.Content.ReadAsAsync<PostResponse>();
         }
 
 
