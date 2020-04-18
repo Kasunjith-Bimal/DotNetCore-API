@@ -15,6 +15,7 @@ using TESTAPI.Services;
 namespace TESTAPI.Controllers.V1
 {
     [Authorize (Roles ="Poster,Admin")]
+    [Produces("application/json")]
     public class PostController:Controller
     {
         private readonly IPostService _postService;
@@ -25,8 +26,12 @@ namespace TESTAPI.Controllers.V1
             _postService = postService;
             _mapper = mapper;
         }
+
+        /// <summary>
+        /// Return All Psot In System
+        /// </summary>
+        /// <response code="200">Return all the tags in the system</response>
         [HttpGet(ApiRoutes.Posts.GetAll)]
-       
         public async Task<IActionResult> GetAll()
         {
             var posts = await _postService.GetPostsAsync();
@@ -101,10 +106,16 @@ namespace TESTAPI.Controllers.V1
         }
 
 
-
-
+        /// <summary>
+        /// Create a Post in the System 
+        /// </summary>
+        /// <response code="201">Create a tag in the system </response>
+        /// <response code="400">Unable to Create the post due to validation error </response>
+        /// <response code="401">Unauthorize </response>
         [HttpPost(ApiRoutes.Posts.Create)]
         [Authorize(Roles = "Poster")]
+        [ProducesResponseType(typeof(PostResponse),201)]
+        [ProducesResponseType(typeof(ErrorResponse),400)]
         public async Task<IActionResult> Post([FromBody] CreatePostReqest postReqest)
         {
 

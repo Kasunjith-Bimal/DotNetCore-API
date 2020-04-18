@@ -85,33 +85,6 @@ namespace TESTAPI.Instrallers
 
             services.AddSingleton<IAuthorizationHandler, Handler>();
 
-            services.AddSwaggerGen(x =>
-            {
-                x.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "V1" });
-
-
-
-                x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-
-                    Description = "JWT Authentication header using bearer scheme",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey
-
-                });
-
-                x.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {new OpenApiSecurityScheme{ Reference = new OpenApiReference
-                        {
-                        Id ="Bearer",
-                        Type = ReferenceType.SecurityScheme
-
-                    }},new List<string>()}
-                });
-
-            });
 
 
 
