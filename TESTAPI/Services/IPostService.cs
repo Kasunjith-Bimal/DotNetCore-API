@@ -8,7 +8,7 @@ namespace TESTAPI.Services
 {
     public interface IPostService
     {
-        Task<List<Post>> GetPostsAsync();
+        Task<List<Post>> GetPostsAsync(PaginationFilter paginationFilter =null);
 
         Task<bool> CreatePostAsync(Post postToCreate);
 
