@@ -7,6 +7,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -85,7 +86,13 @@ namespace TESTAPI.Instrallers
 
             services.AddSingleton<IAuthorizationHandler, Handler>();
 
-
+            services.AddSingleton<IUriService>(provider =>
+            {
+                var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+                var reqest = accessor.HttpContext.Request;
+                var absoluteUri = string.Concat(reqest.Scheme, "://", reqest.Host.ToUriComponent(), "/");
+                return new UriService(absoluteUri);
+            });
 
 
         }

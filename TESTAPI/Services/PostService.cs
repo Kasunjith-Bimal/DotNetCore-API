@@ -53,9 +53,16 @@ namespace TESTAPI.Services
             return await _dataContext.Posts.Where(x => x.Id == postId).FirstOrDefaultAsync();
         }
 
-        public async Task<List<Post>> GetPostsAsync()
+        public async Task<List<Post>> GetPostsAsync(PaginationFilter paginationFilter = null)
         {
-            return await _dataContext.Posts.ToListAsync();
+            if (paginationFilter == null)
+            {
+                return await _dataContext.Posts.ToListAsync();
+            }
+
+            var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
+
+            return await _dataContext.Posts.Skip(skip).Take(paginationFilter.PageSize).ToListAsync();
         }
 
         public async Task<bool> UpdatePostAsync(Post postToUpdate)
@@ -63,8 +70,6 @@ namespace TESTAPI.Services
              _dataContext.Posts.Update(postToUpdate);
               var updated = await _dataContext.SaveChangesAsync();
               return updated > 0;
-
-
         }
 
         public async Task<bool> UserOwnsPostAsync(Guid postId, string getUserId)

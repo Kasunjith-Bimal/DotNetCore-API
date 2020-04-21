@@ -7,9 +7,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using TESTAPI.Contract.V1;
 using TESTAPI.Contract.V1.Requests;
+using TESTAPI.Contract.V1.Requests.Queries;
 using TESTAPI.Contract.V1.Responses;
 using TESTAPI.Domain;
 using TESTAPI.Extention;
+using TESTAPI.Helpers;
 using TESTAPI.Services;
 
 namespace TESTAPI.Controllers.V1
@@ -20,11 +22,12 @@ namespace TESTAPI.Controllers.V1
     {
         private readonly IPostService _postService;
         private readonly IMapper _mapper;
-
-        public PostController(IPostService postService, IMapper mapper)
+        private readonly IUriService _uriService;
+        public PostController(IPostService postService, IMapper mapper, IUriService uriService)
         {
             _postService = postService;
             _mapper = mapper;
+            _uriService = uriService;
         }
 
         /// <summary>
@@ -32,11 +35,24 @@ namespace TESTAPI.Controllers.V1
         /// </summary>
         /// <response code="200">Return all the tags in the system</response>
         [HttpGet(ApiRoutes.Posts.GetAll)]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]PaginationQuery paginationQuery)
         {
-            var posts = await _postService.GetPostsAsync();
+            var pagination = _mapper.Map<PaginationFilter>(paginationQuery);
+           
+            var posts = await _postService.GetPostsAsync(pagination);
+         
             var postResponses = _mapper.Map<List<PostResponse>>(posts);
-            return Ok(postResponses);
+
+            if (pagination == null || pagination.PageSize < 1 || pagination.PageNumber <1)
+            {
+                return Ok(new PagedResponse<PostResponse>(postResponses));
+            }
+
+            var paginationResponse = PaginationHelper.CreeatePaginatedResponse(_uriService, pagination, postResponses);
+
+           
+
+            return Ok(paginationResponse);
 
         }
 
@@ -50,7 +66,7 @@ namespace TESTAPI.Controllers.V1
                 return NotFound();
             }
 
-            return Ok(_mapper.Map<PostResponse>(post));
+            return Ok(new Response<PostResponse>(_mapper.Map<PostResponse>(post)));
 
         }
 
@@ -73,7 +89,7 @@ namespace TESTAPI.Controllers.V1
 
             if (isUpdated)
             {
-                return Ok(_mapper.Map<PostResponse>(post));
+                return Ok(new Response<PostResponse>( _mapper.Map<PostResponse>(post)));
             }
             else
             {
@@ -113,8 +129,8 @@ namespace TESTAPI.Controllers.V1
         /// <response code="400">Unable to Create the post due to validation error </response>
         /// <response code="401">Unauthorize </response>
         [HttpPost(ApiRoutes.Posts.Create)]
-        [Authorize(Roles = "Poster")]
-        [ProducesResponseType(typeof(PostResponse),201)]
+        [Authorize(Roles = "Poster")] 
+        [ProducesResponseType(typeof(PostResponse),201)]        
         [ProducesResponseType(typeof(ErrorResponse),400)]
         public async Task<IActionResult> Post([FromBody] CreatePostReqest postReqest)
         {
@@ -126,11 +142,12 @@ namespace TESTAPI.Controllers.V1
 
             bool created =  await _postService.CreatePostAsync(post);
 
-            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+            // var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
 
-            var location = baseUrl + "/" + ApiRoutes.Posts.Get.Replace("{postId}", post.Id.ToString());
+            //var location = baseUrl + "/" + ApiRoutes.Posts.Get.Replace("{postId}", post.Id.ToString());
 
-            return Created(location, _mapper.Map<PostResponse>(post));
+            var location = _uriService.GetPostUri(post.Id.ToString());
+            return Created(location, new Response<PostResponse>( _mapper.Map<PostResponse>(post)));
           
           
          
